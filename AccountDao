@@ -1,0 +1,62 @@
+package cn.itcast.app;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+
+import cn.itcast.domain.Account;
+import cn.itcast.tools.Mytools;
+
+
+
+public class AccountDao {
+	//查询余额
+	public static double creakBalance(Connection conn, String fromCardid) throws SQLException, Exception {
+		String sql = "select balance from Account where cardid = ?";
+		Account acc = new QueryRunner().query(conn,sql,new BeanHandler<>(Account.class), fromCardid);
+		double money = acc.getBalance();
+		return money;
+	}
+	
+	//付款sql
+	public static int payMent(Connection conn,double money, String fromCardid) throws SQLException, Exception {
+		String sql = "update Account set balance= balance - ? where cardid = ?";
+		int row1 = new QueryRunner().update(conn, sql, money, fromCardid);
+		return row1;
+	}
+	//收款sql
+	public static int collection(Connection conn,double money, String toCardid) throws SQLException, Exception {
+		String sql = "update Account set balance= balance + ? where cardid = ?";
+		int row2 = new QueryRunner().update(conn, sql, money, toCardid);
+		return row2;
+	}
+	//利率调整方法
+	public static int lilv(Connection conn,String cardid) throws SQLException{
+		QueryRunner qr = new QueryRunner();
+
+		String sql1 = "update Account set moneyRate = 2.8 where cardid = ? and balance > 15000000";
+		int row1 = qr.update(conn,sql1,cardid);
+		String sql2 = "update Account set moneyRate = 2.5 where cardid = ? and balance <= 15000000";
+		int row2 = qr.update(conn,sql2,cardid);
+	
+		return row1+row2;
+		
+	}
+	//生成日志
+	public static int putoutlog(Connection conn,String fromCordid,double money) throws SQLException{
+		//String time = new SimpleDateFormat("yyyy-MM-dd,hh:mm:ss").format(new Date());
+		int rows = new QueryRunner().update(conn,"insert into transaction values(null,?,?,?,?)",fromCordid,"转出",money,new Date() );
+		
+		return rows;
+	}
+	public static int putinlog(Connection conn,double money, String toCordid) throws SQLException{
+		int rows = new QueryRunner().update(conn,"insert into transaction values(null,?,?,?,?)",toCordid,"转入",money,new Date() );
+		return rows;
+	}
+}
+
