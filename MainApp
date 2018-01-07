@@ -1,0 +1,42 @@
+package cn.itcast.app;
+
+import java.util.Scanner;
+
+public class MainApp {
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		Transfer(sc);
+
+	}
+
+	private static void Transfer(Scanner sc) {
+		System.out.println("请输入汇款卡号:");
+		String fromCordid = sc.nextLine().toString();
+		System.out.println("请输入收款卡号:");
+		String toCordid = sc.nextLine().toString();
+		System.out.println("请输入汇款金额");
+		double money = Double.parseDouble(sc.next());
+		boolean flag = AccountService.transferAccounts(money, fromCordid, toCordid);
+		if (flag) {
+			System.out.println("转账成功");
+			saveInfo(fromCordid, money, toCordid);
+		} else {
+			System.out.println("转账失败");
+		}
+	}
+	private static void saveInfo(String fromCordid,double money,String toCordid){
+		boolean info = AccountService.info(fromCordid, money, toCordid);
+		boolean lilv = AccountService.lilv(fromCordid, toCordid);
+
+		if (lilv) {
+			System.out.println("利率修改成功");
+		} else {
+			System.out.println("利率修改失败");
+		}
+		if (info) {
+			System.out.println("转账信息写入成功");
+		} else {
+			System.out.println("转账信息写入失败");
+		}
+	}
+}
