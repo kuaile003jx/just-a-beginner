@@ -1,0 +1,93 @@
+package cn.itcast.tools;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ResourceBundle;
+
+import javax.sql.DataSource;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+public class Mytools {
+
+	private static ComboPooledDataSource dataSource = new ComboPooledDataSource();
+
+
+	private static ThreadLocal<Connection> tl = new ThreadLocal<>();
+	
+	public static void startTransaction() throws Exception{
+		Connection conn = getCurrentConnection();
+		conn.setAutoCommit(false);
+	}
+
+	
+	public static Connection getCurrentConnection() throws Exception{
+		Connection conn = tl.get();
+		if(conn==null){
+			conn = getConnection();
+			tl.set(conn);
+		}
+		return conn;
+	}
+	
+	public static void rollback(){
+		Connection conn = null;
+		try {
+			conn = getCurrentConnection();
+			conn.rollback();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void commit(){
+		Connection conn = null;
+		try {
+			conn = getCurrentConnection();
+			conn.commit();
+			tl.remove();
+			conn.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
+	
+	public static DataSource getDataSource(){
+		return dataSource;
+	}
+
+	public static Connection getConnection() throws Exception{
+		Connection conn = dataSource.getConnection();
+		return conn;
+	}Mytools
+
+	public static void closeALL(Connection conn,Statement stmt,ResultSet rs){
+		if(rs!=null){
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if(stmt!=null){
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if(conn!=null){
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+}
